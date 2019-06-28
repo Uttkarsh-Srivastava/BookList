@@ -11,20 +11,7 @@ class Book {
 
 class UI {
   static displayBooks() {
-    const StoredBooks = [
-      {
-        title: "Book One",
-        author: "John Doe",
-        isbn: "123"
-
-      },
-      {
-        title: "Book Two",
-        author: "John Cena",
-        isbn: "787"
-
-      }];
-    const books = StoredBooks;
+    const books = Store.getBooks();
 
     books.forEach((book) => UI.addBookToList(book));
   }
@@ -62,9 +49,43 @@ class UI {
   }
 }
 // Store Class: Handles Storage
+class Store {
+  //Get Book from Local Storage
+  static getBooks() {
+    let books;
+    if (localStorage.getItem('books') == null) {
+      books = [];
+    }
+    else {
+      books = JSON.parse(localStorage.getItem('books'))
+    }
+    return books;
+  }
 
+  // Book from Local Storage
+
+  static addBook(book) {
+    let books;
+    books = Store.getBooks()
+    books.push(book)
+    localStorage.setItem('books', JSON.stringify(books))
+  }
+
+  //Remove Book from Local Storage
+
+  static removeBook(isbn) {
+    let books = Store.getBooks()
+    books.forEach((book, index) => {
+      if (book.isbn === isbn) {
+        books.splice(index, 1)
+      }
+    })
+    localStorage.setItem('books', JSON.stringify(books))
+  }
+}
 // Event: Display Book
 document.addEventListener("DOMContentLoaded", UI.displayBooks);
+
 // Event: Add Book
 
 document.querySelector("#book-form").addEventListener("submit", e => {
@@ -77,11 +98,15 @@ document.querySelector("#book-form").addEventListener("submit", e => {
   const isbn = document.querySelector('#isbn').value;
   if (title != "" && author != "" && isbn != "") {
 
-    const book = new Book(title, author, isbn)
+    const book = new Book(title, author, isbn);
 
+    //Add Book to UI
     UI.addBookToList(book);
-    UI.showAlert("Book Added", "success")
+    //Add Book to storage
+    Store.addBook(book);
+    UI.showAlert("Book Added", "success");
     UI.clearFields();
+
   }
   else {
     UI.showAlert("Please Enter The Details", "danger")
@@ -94,8 +119,14 @@ document.querySelector("#book-form").addEventListener("submit", e => {
 document.querySelector("#book-list").addEventListener("click", (e) => {
   if (e.target.classList.contains('delete')) {
     if (confirm("Are you sure ?")) {
+      //Remove book from UI
+
       e.target.parentElement.parentElement.remove();
+
+      //Remove book from Local Storage
+      Store.removeBook(e.target.parentElement.previousElementSibling.textContent);
       UI.showAlert("Book Removed", "success")
+
     }
   }
 });
